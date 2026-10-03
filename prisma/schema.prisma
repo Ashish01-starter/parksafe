@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ParkingLocation {
+  id                           String            @id @default(cuid())
+  osmId                        String?           @unique
+  name                         String
+  address                      String?
+  area                         String            // e.g. "T. Nagar", "Anna Nagar", "Adyar", "Guindy", etc.
+  city                         String            @default("Chennai")
+  parkingType                  String            @default("public_lot") // "street", "parking_lot", "mall", "metro", "railway", "college_university", "institutional", "surface", "multi_storey", "underground"
+  accessType                   String            @default("unknown")    // "public", "customers", "private", "permit", "unknown"
+  latitude                     Float
+  longitude                    Float
+  supportedVehicleTypes        String            @default("TWO_WHEELER,FOUR_WHEELER") // "TWO_WHEELER,FOUR_WHEELER", "TWO_WHEELER", "FOUR_WHEELER"
+  
+  // Capacities (null if unverified/unknown in OSM)
+  capacity                     Int?              // Total overall capacity
+  carCapacity                  Int?              // Dedicated 4W capacity
+  twoWheelerCapacity           Int?              // Dedicated 2W capacity
+  isSharedCapacity             Boolean           @default(false) // Whether 2W and 4W share spaces
+
+  // Live / Verified Availability (Separated!)
+  availableCarSpaces           Int?              // null if unknown
+  availableTwoWheelerSpaces    Int?              // null if unknown
+  
+  availabilityStatus           String            @default("UNKNOWN") // "AVAILABLE", "LIMITED", "FULL", "UNKNOWN"
+  carAvailabilityStatus        String            @default("UNKNOWN") // "AVAILABLE", "LIMITED", "FULL", "UNKNOWN"
+  twoWheelerAvailabilityStatus String            @default("UNKNOWN") // "AVAILABLE", "LIMITED", "FULL", "UNKNOWN"
+
+  availabilitySource           String            @default("unknown") // "official", "sensor", "camera", "user_report", "user_confirmation", "estimated", "unknown"
+  confidence                   String            @default("none")    // "very_high", "high", "medium_high", "medium", "low", "none"
+  dataSource                   String            @default("OpenStreetMap") // "OpenStreetMap", "ManualVerification", "ChennaiSmartCity"
+  
+  hasIndividualSpaces          Boolean           @default(false)
+  isDemoData                   Boolean           @default(false)
+  
+  fee                          String?           // "yes", "no", "unknown"
+  operator                     String?           // Operator tag from OSM if present
+  
+  lastUpdated                  DateTime          @default(now())
+  createdAt                    DateTime          @default(now())
+
+  spaces                       ParkingSpace[]
+  events                       AvailabilityEvent[]
+  reports                      UserReport[]
+
+  @@index([area])
+  @@index([latitude, longitude])
+  @@index([availabilityStatus])
+  @@index([parkingType])
+}
+
+model ParkingSpace {
+  id                String          @id @default(cuid())
+  spaceIdentifier   String          // e.g. "A1", "A2", "M1"
+  section           String?         // "Ground Level A", "Bike Bay 1"
+  parkingLocationId String
+  vehicleType       String          // "TWO_WHEELER", "FOUR_WHEELER", "BOTH"
+  status            String          @default("available") // "available", "occupied", "reserved", "out_of_service"
+  latitude          Float?
+  longitude         Float?
+  lastUpdated       DateTime        @default(now())
+  lastUpdatedBy     String?         // session id or "system"
+  source            String          @default("manual") // "manual", "user_confirmation", "sensor", "camera"
+  
+  location          ParkingLocation @relation(fields: [parkingLocationId], references: [id], onDelete: Cascade)
+
+  @@unique([parkingLocationId, spaceIdentifier])
+  @@index([parkingLocationId])
+  @@index([status])
+}
+
+model AvailabilityEvent {
+  id                String          @id @default(cuid())
+  parkingLocationId String
+  spaceId           String?
+  vehicleType       String          @default("BOTH") // "TWO_WHEELER", "FOUR_WHEELER", "BOTH"
+  eventType         String          // "parked", "vacated", "report_full", "report_available", "status_change"
+  previousAvailable Int?
+  newAvailable      Int?
+  deltaSpaces       Int             @default(0) // -1 for parked, +1 for vacated
+  sessionId         String?
+  source            String          @default("user_confirmation") // "user_confirmation", "user_report", "sensor", "camera", "official"
+  metadata          String?         // JSON string
+  timestamp         DateTime        @default(now())
+
+  location          ParkingLocation @relation(fields: [parkingLocationId], references: [id], onDelete: Cascade)
+
+  @@index([parkingLocationId])
+  @@index([timestamp])
+}
+
+model UserReport {
+  id                   String          @id @default(cuid())
+  parkingLocationId    String
+  spaceId              String?
+  vehicleType          String          @default("ALL") // "TWO_WHEELER", "FOUR_WHEELER", "ALL"
+  reportType           String          // "space_available", "space_occupied", "location_full", "location_closed", "wrong_info", "other"
+  reportedAvailability Int?            // Observed count
+  details              String?
+  reportedBySession    String?
+  status               String          @default("pending") // "pending", "reviewed", "applied", "rejected"
+  source               String          @default("user_report")
+  confidenceImpact     Float           @default(0.5)
+  createdAt            DateTime        @default(now())
+
+  location             ParkingLocation @relation(fields: [parkingLocationId], references: [id], onDelete: Cascade)
+
+  @@index([parkingLocationId])
+  @@index([createdAt])
+}
+
+model UserSession {
+  id                String          @id @default(cuid())
+  sessionId         String          @unique
+  vehicleType       String?         // "TWO_WHEELER", "FOUR_WHEELER"
+  activeParkingId   String?
+  activeSpaceId     String?
+  parkedAt          DateTime?
+  lastLatitude      Float?
+  lastLongitude     Float?
+  lastActiveAt      DateTime        @default(now())
+  createdAt         DateTime        @default(now())
+}

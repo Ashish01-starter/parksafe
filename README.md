@@ -1,55 +1,53 @@
-# parkSafe
+# PARKSAFE 🅿️
 
-A public parking finder for Chennai that helps users discover nearby parking locations for two-wheelers and four-wheelers.
+## 🌍 Live Demo
+[🔗 View Live Project](https://parksafe-sigma.vercel.app/)
 
-## Features
+---
 
-- 📍 GPS-based parking discovery
-- 🔎 Search for parking locations
-- 🗺️ Interactive OpenStreetMap map
-- 🛵 Two-wheeler parking support
-- 🚗 Four-wheeler parking support
-- 📌 278 Chennai parking locations
-- 🅿️ Individual parking-space support
-- 🧭 Navigation to selected parking locations
-- 🔄 Automatic availability refresh
-- 👤 User parking confirmation
-- 📊 Parking availability tracking
-- 📱 Responsive interface
-- ☁️ Production deployment with Vercel
-- 🗄️ PostgreSQL database
+## 📌 Description
+A responsive web application that helps users find public parking locations across Chennai. The application supports both two-wheelers and four-wheelers, uses interactive maps for parking discovery, and provides navigation to selected parking locations through a clean and user-friendly interface.
 
-## Data
+---
 
-Parking locations are imported from OpenStreetMap and stored in PostgreSQL.
-
-The current database contains 278 unique Chennai parking locations.
-
-OpenStreetMap provides the location information. Availability is not assumed to be real-time unless it comes from a supported availability source.
-
-## Tech Stack
-
+## ⚙️ Tech Stack
 - Next.js
 - React
 - TypeScript
-- Tailwind CSS
-- Prisma ORM
 - PostgreSQL
+- Prisma ORM
 - Leaflet
 - OpenStreetMap
 - Vercel
 
-## Architecture
+---
 
-```text
-User
-  ↓
-Next.js / React
-  ↓
-Leaflet + OpenStreetMap
-  ↓
-Next.js API
-  ↓
-Prisma ORM
-  ↓
-PostgreSQL
+## 🚀 Features
+- 📍 Find nearby public parking locations
+- 🛵 Two-wheeler parking support
+- 🚗 Four-wheeler parking support
+- 🗺️ Interactive map using OpenStreetMap
+- 🔎 Search for parking locations
+- 🧭 Navigation to selected parking locations
+- 🅿️ Parking space selection
+- 📊 Parking availability tracking
+- 📱 Responsive UI for all devices
+- ⚡ Automatic availability refresh
+- 🌐 278 Chennai parking locations
+
+---
+
+## 🛠️ Installation & Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Ashish01-starter/parksafe.git
+
+# Navigate to project folder
+cd parksafe
+
+# Install dependencies
+npm install
+
+# Run the project
+npm run dev
